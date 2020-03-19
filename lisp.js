@@ -1,9 +1,16 @@
+const fs = require('fs');
+
 const chalk = require('chalk');
 
 const lg = console.log;
 
 const fns = {
-    'sum': (...xs) => xs.length === 0 ? 0 : xs[0] + fns['sum'](...xs.slice(1)),
+    '+': (...xs) => xs.length === 0 ? 0 : xs[0] + fns['+'](...xs.slice(1)),
+    '-': (...xs) => xs.length === 0 ? 0 : xs[0] - fns['-'](...xs.slice(1)),
+    '*': (...xs) => xs.length === 0 ? 1 : xs[0] * fns['*'](...xs.slice(1)),
+    '/': (...xs) => xs.length === 0 ? 1 : xs[0] / fns['/'](...xs.slice(1)),
+    '"': (atom) => atom,
+    "len": (arg) => arg.length,
     'range': (l, u) => makeRange(l, u),
 };
 
@@ -41,6 +48,9 @@ function eval (list, depth = 0) {
     lg(`${'|   '.repeat(depth)}${chalk.cyanBright('eval')}: ${fmt(list)}`);
     let args = [];
     let fn = fns[list[0]];
+    if (!fn) {
+        throw new Error(`Unknown function or qualifier \`${list[0]}\``);
+    }
     let recursed = false;
     list.slice(1).forEach(x => {
         if (Array.isArray(x)) {
@@ -67,18 +77,24 @@ function eval (list, depth = 0) {
 
 const parse = source => 
     JSON.parse(source
+        .replace(/;.*\n/g, '')
+        .trim()
+        .replace(/\s+/g, ' ')
         .replace(/\(/g, '[')
         .replace(/\)/g, ']')
-        .replace(/([a-z]+)/g, '"$1"')
-        .replace(/\s+/g, ', '));
+        .replace(/([a-z\+\-\*\/\"]+)/g, '"$1"')
+        .replace(/\s+([^\s\]])/g, ', $1')
+        .replace(/"""/g, '"\\""')
+    );
 
-/*let program = ['sum', 9, 9, 2, ['sum', 4, 4], 7];
-
-eval(program);*/
-
-let source = '(sum 9 9 (sum 5 5) 2 (range 2 5) 7)';
+const source = fs.readFileSync('program.kzlisp', 'utf8');
 lg(source);
 let parsed = parse(source);
+console.log(parsed);
 
-let result = eval(parsed);
-lg(result);
+try {
+    let result = eval(parsed);
+    lg(result);
+} catch (e) {
+    console.log(chalk.red(e.message));
+}

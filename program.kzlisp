@@ -1,0 +1,9 @@
+; my little program
+
+; let's begin with a summation
+(+ 9 9
+    (- 12 5)
+2
+    (range 2 5)
+    (/ 12 3)
+7)
