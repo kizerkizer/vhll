@@ -1,4 +1,5 @@
 ; my little program
+(program
 
 ; let's begin with a summation
 (+ 9 9
@@ -7,3 +8,7 @@
     (range 2 5)
     (/ 12 3)
 7)
+
+(log the end)
+
+)
